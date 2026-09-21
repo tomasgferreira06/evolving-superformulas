@@ -91,6 +91,26 @@ class AutomaticEvolution {
 
     // Always re-evaluate before selection so target/genotype fitness cannot be stale.
     evaluatePopulation(population);
+    return stepFromCurrentEvaluation(population);
+  }
+
+  boolean stepFromCurrentEvaluation(Population population) {
+    requirePopulation(population);
+    mode = EvolutionMode.AUTOMATIC;
+    if (!targetFitness.hasTarget()) {
+      automaticRunning = false;
+      invalidateEvaluation();
+      println("Automatic mode unavailable: target image missing.");
+      return false;
+    }
+    if (population.getGeneration() >= config.maxAutomaticGenerations) {
+      automaticRunning = false;
+      return false;
+    }
+    if (!hasCurrentEvaluation(population)) {
+      throw new IllegalStateException("Automatic fitness must be current before reproduction");
+    }
+
     double[] weights = copyFitness();
     int generationBefore = population.getGeneration();
     population.nextGenerationFromWeights(

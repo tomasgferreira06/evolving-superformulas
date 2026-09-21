@@ -302,7 +302,7 @@ class InteractiveUI {
     }
     text(readiness, margin, 128);
     text("Click select | 1-9 rate | 0 rate 10 | Backspace/Delete clear", margin, 146);
-    text("Enter/Space = next generation | R = reset", margin, 164);
+    text("Enter/Space = next generation | R = reset | E = experiments", margin, 164);
   }
 
   private void drawAutomaticStatus(Population population) {
@@ -331,7 +331,7 @@ class InteractiveUI {
     text("Crossover: " + config.crossoverOperator, margin, 92);
     text("Mutation: " + config.mutationOperator, margin, 110);
     text("A = start | S = stop | N = one automatic step", margin, 128);
-    text("I = interactive mode | R = deterministic reset", margin, 146);
+    text("I = interactive mode | R = deterministic reset | E = experiments", margin, 146);
     text("hovered=" + indexLabel(hoveredIndex) + "  selected=" + indexLabel(selectedIndex), margin, 164);
   }
 

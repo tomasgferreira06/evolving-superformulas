@@ -12,6 +12,7 @@ java.util.Random mutationRandom;
 TargetImageFitness targetFitness;
 boolean configuredTargetLoaded;
 AutomaticEvolution automaticEvolution;
+ExperimentRunner experimentRunner;
 int renderedIndividualCount;
 
 void settings() {
@@ -41,6 +42,7 @@ void setup() {
 
   configuredTargetLoaded = targetFitness.loadConfiguredTarget();
   automaticEvolution = new AutomaticEvolution(config, targetFitness, crossover, mutation);
+  experimentRunner = new ExperimentRunner(config, targetFitness);
   interactiveUI.setAutomaticEvolution(automaticEvolution);
   if (configuredTargetLoaded) {
     TargetEvaluation evaluation = targetFitness.evaluate(population.getIndividual(0));
@@ -85,6 +87,14 @@ void mouseReleased() {
 }
 
 void keyReleased() {
+  if (key == 'e' || key == 'E') {
+    if (automaticEvolution.automaticRunning) {
+      println("[Experiment] Stop the automatic UI run before starting a batch.");
+    } else {
+      experimentRunner.runAutomaticExperiments();
+    }
+    return;
+  }
   if (key == 'a' || key == 'A') {
     automaticEvolution.start(population);
     return;

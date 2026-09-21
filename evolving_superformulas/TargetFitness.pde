@@ -51,6 +51,16 @@ class TargetImageFitness {
     targetRevision++;
   }
 
+  void setPreprocessedTarget(PImage target) {
+    if (target == null
+        || target.width != config.evaluationWidth
+        || target.height != config.evaluationHeight) {
+      throw new IllegalArgumentException("Preprocessed target dimensions must match evaluation resolution");
+    }
+    normalizedTarget = target.get();
+    targetRevision++;
+  }
+
   boolean hasTarget() {
     return normalizedTarget != null;
   }
@@ -63,7 +73,7 @@ class TargetImageFitness {
     if (normalizedTarget == null) {
       throw new IllegalStateException("No target image is loaded");
     }
-    return evaluateAgainst(individual, normalizedTarget);
+    return compareImages(renderCandidate(individual), normalizedTarget);
   }
 
   TargetEvaluation evaluateAgainst(Individual individual, PImage target) {
@@ -88,7 +98,9 @@ class TargetImageFitness {
     individualRenderer.render(individual, buffer);
     buffer.popMatrix();
     buffer.endDraw();
-    return buffer.get();
+    PImage rendered = buffer.get();
+    buffer.dispose();
+    return rendered;
   }
 
   TargetEvaluation compareImages(PImage candidate, PImage target) {
@@ -136,7 +148,9 @@ class TargetImageFitness {
     // Fixed stretch-to-size policy; transparency is flattened against white.
     normalized.image(source, 0, 0, config.evaluationWidth, config.evaluationHeight);
     normalized.endDraw();
-    return normalized.get();
+    PImage result = normalized.get();
+    normalized.dispose();
+    return result;
   }
 
   private void validateComparableImages(PImage candidate, PImage target) {
