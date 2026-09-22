@@ -128,25 +128,7 @@ class Population {
     }
   }
 
-  void sortByInteractiveFitness(InteractiveFitness interactiveFitness) {
-    if (interactiveFitness == null) {
-      throw new IllegalArgumentException("Interactive fitness must not be null");
-    }
-    double[] ratings = new double[individuals.length];
-    for (int i = 0; i < individuals.length; i++) {
-      ratings[i] = interactiveFitness.isRated(individuals[i])
-        ? interactiveFitness.getRating(individuals[i])
-        : -1.0;
-    }
-    sortByFitnessDescending(ratings);
-  }
 
-  int indexOf(Individual individual) {
-    for (int i = 0; i < individuals.length; i++) {
-      if (individuals[i] == individual) return i;
-    }
-    return -1;
-  }
 
   private int bestRatedIndex(InteractiveFitness interactiveFitness) {
     int bestIndex = 0;

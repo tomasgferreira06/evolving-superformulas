@@ -276,7 +276,7 @@ class InteractiveUI {
     }
     int rated = interactiveFitness.ratedCount(population);
     int unrated = population.size() - rated;
-    text("Phase 9: Interactive Evolution", margin, 18);
+    text("Interactive Evolution", margin, 18);
     text(
       "Generation: " + population.getGeneration()
       + "  Population: " + population.size()
@@ -309,7 +309,7 @@ class InteractiveUI {
 
   private void drawAutomaticStatus(Population population) {
     boolean current = automaticEvolution.hasCurrentEvaluation(population);
-    text("Phase 11: Automatic Target Evolution", margin, 18);
+    text("Automatic Target Evolution", margin, 18);
     text(
       "Generation: " + population.getGeneration()
       + " / " + config.maxAutomaticGenerations

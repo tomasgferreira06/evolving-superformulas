@@ -40,7 +40,7 @@ class TargetImageFitness {
     println("Target source dimensions: " + loaded.width + "x" + loaded.height);
     setTarget(loaded);
     println(
-      "Phase 10 target loaded: " + config.targetImagePath
+      "Target loaded: " + config.targetImagePath
       + " -> normalized " + normalizedTarget.width + "x" + normalizedTarget.height
     );
     return true;
@@ -155,7 +155,7 @@ class TargetImageFitness {
 
   private void printMissingTargetMessage() {
     println(
-      "Phase 10 target missing: place " + config.targetImagePath
+      "Target missing: place " + config.targetImagePath
       + " in the sketch data folder to enable manual target evaluation"
     );
   }

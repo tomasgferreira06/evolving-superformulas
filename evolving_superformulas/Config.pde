@@ -1,6 +1,5 @@
 class Config {
   // Project baseline settings; these are not assignment-mandated.
-  final boolean runStartupValidation = false;
   final int formulasPerIndividual;
   final int populationSize;
   final long randomSeed;
