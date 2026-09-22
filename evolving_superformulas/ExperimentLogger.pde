@@ -72,15 +72,19 @@ class ExperimentLogger {
   final java.io.PrintWriter generationWriter;
   final java.io.PrintWriter runWriter;
   final java.io.PrintWriter combinationWriter;
+  final java.io.PrintWriter metadataWriter;
   int generationRowCount;
   int runRowCount;
   int combinationRowCount;
 
-  ExperimentLogger(java.io.File outputDirectory) {
-    if (outputDirectory == null) {
-      throw new IllegalArgumentException("Experiment output directory must not be null");
+  ExperimentLogger(java.io.File outputDirectory, Config config) {
+    if (outputDirectory == null || config == null) {
+      throw new IllegalArgumentException("Experiment logger requires an output directory and Config");
     }
-    if (!outputDirectory.mkdirs() && !outputDirectory.isDirectory()) {
+    if (outputDirectory.exists()) {
+      throw new IllegalStateException("Experiment output directory already exists");
+    }
+    if (!outputDirectory.mkdirs()) {
       throw new IllegalStateException("Could not create experiment output directory");
     }
     this.outputDirectory = outputDirectory;
@@ -93,7 +97,11 @@ class ExperimentLogger {
     combinationWriter = createWriter(new java.io.File(
       outputDirectory, "automatic_combination_summary.csv"
     ).getAbsolutePath());
+    metadataWriter = createWriter(new java.io.File(
+      outputDirectory, "phase_14_metadata.csv"
+    ).getAbsolutePath());
     writeHeaders();
+    writeMetadata(config);
   }
 
   void logGeneration(
@@ -162,9 +170,26 @@ class ExperimentLogger {
     generationWriter.flush();
     runWriter.flush();
     combinationWriter.flush();
+    metadataWriter.flush();
     generationWriter.close();
     runWriter.close();
     combinationWriter.close();
+    metadataWriter.close();
+  }
+
+  private void writeMetadata(Config config) {
+    metadataWriter.println("key,value");
+    metadataWriter.println("populationSize," + config.populationSize);
+    metadataWriter.println("eliteSize," + config.eliteSize);
+    metadataWriter.println("fitnessMetric,blue-channel RMSE");
+    metadataWriter.println("pixelRepresentation,pixel & 0xFF");
+    metadataWriter.println("renderBackground," + config.automaticBackground);
+    metadataWriter.println("renderStroke," + config.automaticStroke);
+    metadataWriter.println("strokeWeight,height * " + config.automaticStrokeWeightFraction);
+    metadataWriter.println(
+      "evaluationResolution," + config.evaluationWidth + "x" + config.evaluationHeight
+    );
+    metadataWriter.println("targetResize,source.copy() then resize(width height)");
   }
 
   private void writeHeaders() {

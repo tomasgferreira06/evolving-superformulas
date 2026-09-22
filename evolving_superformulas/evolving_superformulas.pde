@@ -68,6 +68,7 @@ void runFullStartupValidation() {
   runPhaseTenChecks(population);
   resetInteractiveRun();
   runPhaseElevenChecks();
+  runPhaseFourteenChecks();
   resetInteractiveRun();
 }
 
@@ -156,10 +157,13 @@ int ratingForKey(char pressedKey) {
 }
 
 void runPhaseOneAndTwoRegressionChecks() {
-  require(config.formulasPerIndividual == 2, "Default Phase 3 sketch expects N=2");
+  require(config.formulasPerIndividual > 0, "Fixed N must be positive");
   SuperFormulaGene formulaA = config.geneFromDecoded(2, 2, 6, 1, 1, 1);
   SuperFormulaGene formulaB = config.geneFromDecoded(1, 1, 5, 1, 2, 2);
-  SuperFormulaGene[] constructorInput = new SuperFormulaGene[] { formulaA, formulaB };
+  SuperFormulaGene[] constructorInput = new SuperFormulaGene[config.formulasPerIndividual];
+  for (int i = 0; i < constructorInput.length; i++) {
+    constructorInput[i] = i % 2 == 0 ? formulaA : formulaB;
+  }
   Individual original = new Individual(config, constructorInput);
 
   DecodedSuperFormula decodedReference = formulaA.decode(config);
@@ -1278,7 +1282,7 @@ void runPhaseTenChecks(Population baseline) {
     + " maximumDifference=" + maximumDifference.fitness
     + " intermediate=" + intermediate.fitness
   );
-  println("Phase 10 validation passed: deterministic off-screen RGB RMSE evaluation");
+  println("Phase 10 validation passed: deterministic off-screen blue-channel RMSE evaluation");
 }
 
 void validateTargetFitnessForFormulaCount(int formulaCount) {
@@ -1706,6 +1710,159 @@ boolean genesHaveSameValues(SuperFormulaGene left, SuperFormulaGene right) {
     && left.n3Gene == right.n3Gene;
 }
 
+
+void runPhaseFourteenChecks() {
+  require(config.populationSize == 30, "Phase 14 default populationSize must be 30");
+  require(config.eliteSize == 1, "Phase 14 eliteSize must be 1");
+  validatePhaseFourteenRendering();
+  validateFitnessFormulaEquivalence();
+  validateAutomaticElitePreservation();
+  validateInteractiveElitePreservation();
+  validatePopulationThirty();
+  println("Phase 14 validation passed: reference alignment and one-elite preservation");
+}
+
+void validatePhaseFourteenRendering() {
+  require(config.automaticBackground == 255, "Automatic background must be white");
+  require(config.automaticStroke == 0, "Automatic stroke must be black");
+  require(abs(config.automaticStrokeWeight(256) - 0.512) < 0.000001,
+    "Automatic strokeWeight at 256px must be 0.512");
+
+  SuperFormulaGene circle = config.geneFromDecoded(1, 1, 4, 2, 2, 2);
+  SuperFormulaGene[] formulas = new SuperFormulaGene[config.formulasPerIndividual];
+  for (int i = 0; i < formulas.length; i++) formulas[i] = circle;
+  PImage rendered = targetFitness.renderCandidate(new Individual(config, formulas));
+  rendered.loadPixels();
+  require((rendered.pixels[0] & 0xff) == 255, "Automatic render background is not white");
+  int centre = (rendered.height / 2) * rendered.width + rendered.width / 2;
+  require((rendered.pixels[centre] & 0xff) == 255, "Automatic Superformula render must use no fill");
+  boolean foundVisibleStroke = false;
+  for (int i = 0; i < rendered.pixels.length; i++) {
+    if ((rendered.pixels[i] & 0xff) < 255) {
+      foundVisibleStroke = true;
+      break;
+    }
+  }
+  require(foundVisibleStroke, "Automatic render did not contain a visible black stroke");
+}
+
+void validateFitnessFormulaEquivalence() {
+  PImage white = createSolidImage(16, 16, color(255));
+  PImage black = createSolidImage(16, 16, color(0));
+  PImage shape = createSolidImage(16, 16, color(255));
+  shape.loadPixels();
+  for (int y = 4; y < 12; y++) {
+    for (int x = 5; x < 11; x++) shape.pixels[y * shape.width + x] = color(0);
+  }
+  shape.updatePixels();
+
+  PImage partial = createImage(16, 16, RGB);
+  partial.loadPixels();
+  int[] grayscale = { 0, 85, 170, 255 };
+  for (int i = 0; i < partial.pixels.length; i++) partial.pixels[i] = color(grayscale[i % 4]);
+  partial.updatePixels();
+
+  assertReferenceFitnessEquivalent(white, white, "identical white images");
+  assertReferenceFitnessEquivalent(black, white, "black versus white");
+  assertReferenceFitnessEquivalent(shape, white, "simple black shape on white");
+  assertReferenceFitnessEquivalent(partial, white, "partially different grayscale image");
+}
+
+void assertReferenceFitnessEquivalent(PImage candidate, PImage target, String caseName) {
+  double actual = targetFitness.compareImages(candidate, target).fitness;
+  double expected = referenceBlueChannelFitness(candidate, target);
+  require(Math.abs(actual - expected) < 0.000000000001,
+    "Blue-channel fitness diverged from reference for " + caseName);
+}
+
+double referenceBlueChannelFitness(PImage candidate, PImage target) {
+  candidate.loadPixels();
+  target.loadPixels();
+  double squaredError = 0.0;
+  for (int i = 0; i < candidate.pixels.length; i++) {
+    int difference = (target.pixels[i] & 0xff) - (candidate.pixels[i] & 0xff);
+    squaredError += (double) difference * difference;
+  }
+  double rmse = Math.sqrt(squaredError / candidate.pixels.length);
+  return 1.0 - rmse / 255.0;
+}
+
+void validateAutomaticElitePreservation() {
+  Config automaticConfig = new Config(
+    8, config.randomSeed, config.formulasPerIndividual,
+    config.mutationRate, config.uniformMutationDelta, config.gaussianMutationSigma,
+    "PARAMETER_UNIFORM", "BOUNDED_UNIFORM_MUTATION"
+  );
+  Population automaticPopulation = new Population(automaticConfig);
+  AutomaticEvolution engine = createAutomaticEngine(automaticConfig, automaticPopulation);
+  Individual expectedElite = automaticPopulation.getIndividual(engine.bestIndex).deepCopy();
+  require(engine.stepFromCurrentEvaluation(automaticPopulation), "Automatic elite test did not evolve");
+  require(populationContainsGenome(expectedElite, automaticPopulation),
+    "Automatic best genotype was not preserved");
+
+  Config highMutationConfig = new Config(
+    6, config.randomSeed, config.formulasPerIndividual,
+    1.0, 0.5, config.gaussianMutationSigma,
+    "PARAMETER_UNIFORM", "BOUNDED_UNIFORM_MUTATION"
+  );
+  Population highMutationPopulation = new Population(highMutationConfig);
+  Individual commonGenome = highMutationPopulation.getIndividual(0).deepCopy();
+  for (int i = 0; i < highMutationPopulation.size(); i++) {
+    highMutationPopulation.individuals[i] = commonGenome.deepCopy();
+  }
+  double[] equalWeights = new double[highMutationPopulation.size()];
+  java.util.Arrays.fill(equalWeights, 1.0);
+  highMutationPopulation.nextGenerationFromWeights(
+    equalWeights,
+    new RouletteWheelSelection(highMutationConfig.selectionSeed),
+    new Crossover(),
+    new Mutation(),
+    new java.util.Random(highMutationConfig.crossoverSeed),
+    new java.util.Random(highMutationConfig.mutationSeed)
+  );
+  require(individualsHaveSameGenomes(commonGenome, highMutationPopulation.getIndividual(0)),
+    "High mutation changed the automatic elite");
+  for (int i = highMutationConfig.eliteSize; i < highMutationPopulation.size(); i++) {
+    require(!individualsHaveSameGenomes(commonGenome, highMutationPopulation.getIndividual(i)),
+      "High mutation did not change ordinary offspring at index " + i);
+  }
+}
+
+void validateInteractiveElitePreservation() {
+  Config interactiveConfig = new Config(6, config.randomSeed, config.formulasPerIndividual);
+  Population interactivePopulation = new Population(interactiveConfig);
+  for (int i = 0; i < interactivePopulation.size(); i++) {
+    interactiveFitness.assignRating(interactivePopulation.getIndividual(i), 1);
+  }
+  interactiveFitness.assignRating(interactivePopulation.getIndividual(2), 10);
+  interactiveFitness.assignRating(interactivePopulation.getIndividual(4), 10);
+  Individual expectedElite = interactivePopulation.getIndividual(2).deepCopy();
+  require(evolveTestPopulation(interactivePopulation, interactiveConfig),
+    "Interactive elite test did not evolve");
+  require(individualsHaveSameGenomes(expectedElite, interactivePopulation.getIndividual(0)),
+    "Interactive tie policy did not preserve the lowest-index best genotype");
+  require(interactiveFitness.ratedCount(interactivePopulation) == 0,
+    "Interactive elite carried a stale rating into the new generation");
+}
+
+void validatePopulationThirty() {
+  Population populationThirty = new Population(config);
+  require(populationThirty.size() == 30, "Population 30 initialization failed");
+  validateGridLayout(30, config.canvasWidth, config.canvasHeight);
+  validateLifecyclePopulationSize(30);
+  validateAutomaticPopulationSize(30);
+  ExperimentRunner runner = new ExperimentRunner(config, targetFitness);
+  require(runner.config.populationSize == 30, "Experiments did not inherit populationSize 30");
+  require(runner.crossoverOperators.length == 2 && runner.mutationOperators.length == 2,
+    "Experiment operator families changed during Phase 14");
+}
+
+boolean populationContainsGenome(Individual expected, Population actual) {
+  for (int i = 0; i < actual.size(); i++) {
+    if (individualsHaveSameGenomes(expected, actual.getIndividual(i))) return true;
+  }
+  return false;
+}
 void require(boolean condition, String message) {
   if (!condition) {
     throw new RuntimeException(message);

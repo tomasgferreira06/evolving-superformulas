@@ -15,10 +15,14 @@ class Config {
   final long selectionSeed;
   final long crossoverSeed;
   final long mutationSeed;
-  final String targetImagePath = "A.png";
+  final String targetImagePath = "target.png";
   final int evaluationWidth = 256;
   final int evaluationHeight = 256;
   final int maxAutomaticGenerations = 100;
+  final int eliteSize = 1;
+  final int automaticBackground = 255;
+  final int automaticStroke = 0;
+  final float automaticStrokeWeightFraction = 0.002;
 
   final float aMin = 0.5;
   final float aMax = 2.0;
@@ -40,7 +44,6 @@ class Config {
   final int canvasWidth = 500;
   final int canvasHeight = 500;
   final float renderScale = 50.0;
-  final float strokeWeight = 2.0;
 
   final float divisorEpsilon = 0.000001;
   final float n1Epsilon = 0.0001;
@@ -49,14 +52,14 @@ class Config {
 
   Config() {
     this(
-      9, 12345L, 2, 0.20, 0.10, 0.10,
+      30, 12345L, 1, 0.20, 0.10, 0.10,
       "PARAMETER_UNIFORM", "BOUNDED_UNIFORM_MUTATION"
     );
   }
 
   Config(int populationSize, long randomSeed) {
     this(
-      populationSize, randomSeed, 2, 0.20, 0.10, 0.10,
+      populationSize, randomSeed, 1, 0.20, 0.10, 0.10,
       "PARAMETER_UNIFORM", "BOUNDED_UNIFORM_MUTATION"
     );
   }
@@ -115,6 +118,9 @@ class Config {
     }
     if (populationSize <= 0) {
       throw new IllegalArgumentException("populationSize must be positive");
+    }
+    if (eliteSize != 1 || eliteSize > populationSize) {
+      throw new IllegalArgumentException("eliteSize must be exactly 1 and fit the population");
     }
     if (targetImagePath == null || targetImagePath.length() == 0) {
       throw new IllegalArgumentException("targetImagePath must not be empty");
@@ -182,8 +188,12 @@ class Config {
     if (!isFinite(renderScale) || renderScale <= 0) {
       throw new IllegalArgumentException("renderScale must be finite and positive");
     }
-    if (!isFinite(strokeWeight) || strokeWeight <= 0) {
-      throw new IllegalArgumentException("strokeWeight must be finite and positive");
+    if (automaticBackground < 0 || automaticBackground > 255
+        || automaticStroke < 0 || automaticStroke > 255) {
+      throw new IllegalArgumentException("Automatic render colors must be 8-bit values");
+    }
+    if (!isFinite(automaticStrokeWeightFraction) || automaticStrokeWeightFraction <= 0) {
+      throw new IllegalArgumentException("Automatic stroke-weight fraction must be positive");
     }
     if (!isFinite(divisorEpsilon) || divisorEpsilon <= 0) {
       throw new IllegalArgumentException("divisorEpsilon must be finite and positive");
@@ -273,6 +283,13 @@ class Config {
     return (int) ceil((thetaMax - thetaMin) / thetaStep);
   }
 
+
+  float automaticStrokeWeight(int renderHeight) {
+    if (renderHeight <= 0) {
+      throw new IllegalArgumentException("Render height must be positive");
+    }
+    return renderHeight * automaticStrokeWeightFraction;
+  }
   float clampNormalized(float value) {
     if (!isFinite(value)) {
       throw new IllegalArgumentException("Normalized genes must be finite");

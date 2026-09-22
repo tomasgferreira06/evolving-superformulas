@@ -51,7 +51,9 @@ class Population {
     }
 
     Individual[] nextIndividuals = new Individual[individuals.length];
-    for (int i = 0; i < nextIndividuals.length; i++) {
+    nextIndividuals[0] = getIndividual(bestRatedIndex(interactiveFitness)).deepCopy();
+    validateChild(nextIndividuals[0]);
+    for (int i = config.eliteSize; i < nextIndividuals.length; i++) {
       Individual parentA = getIndividual(selection.selectParentIndex(this));
       Individual parentB = getIndividual(selection.selectParentIndex(this));
       Individual crossed = applyCrossover(parentA, parentB, crossover, crossoverRandom);
@@ -83,7 +85,9 @@ class Population {
     selection.totalWeight(weights);
 
     Individual[] nextIndividuals = new Individual[individuals.length];
-    for (int i = 0; i < nextIndividuals.length; i++) {
+    nextIndividuals[0] = getIndividual(bestWeightIndex(weights)).deepCopy();
+    validateChild(nextIndividuals[0]);
+    for (int i = config.eliteSize; i < nextIndividuals.length; i++) {
       Individual parentA = getIndividual(selection.selectIndex(weights));
       Individual parentB = getIndividual(selection.selectIndex(weights));
       Individual crossed = applyCrossover(parentA, parentB, crossover, crossoverRandom);
@@ -98,6 +102,31 @@ class Population {
     return true;
   }
 
+
+  private int bestRatedIndex(InteractiveFitness interactiveFitness) {
+    int bestIndex = 0;
+    int bestRating = interactiveFitness.getRating(getIndividual(0));
+    for (int i = 1; i < individuals.length; i++) {
+      int rating = interactiveFitness.getRating(getIndividual(i));
+      if (rating > bestRating) {
+        bestRating = rating;
+        bestIndex = i;
+      }
+    }
+    return bestIndex;
+  }
+
+  private int bestWeightIndex(double[] weights) {
+    int bestIndex = 0;
+    double bestWeight = weights[0];
+    for (int i = 1; i < weights.length; i++) {
+      if (weights[i] > bestWeight) {
+        bestWeight = weights[i];
+        bestIndex = i;
+      }
+    }
+    return bestIndex;
+  }
   private Individual createRandomIndividual() {
     SuperFormulaGene[] formulas = new SuperFormulaGene[config.formulasPerIndividual];
     for (int i = 0; i < formulas.length; i++) {

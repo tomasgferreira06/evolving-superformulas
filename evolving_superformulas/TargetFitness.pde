@@ -89,10 +89,9 @@ class TargetImageFitness {
     if (individual == null) {
       throw new IllegalArgumentException("Off-screen rendering requires an Individual");
     }
-    PGraphics buffer = createGraphics(config.evaluationWidth, config.evaluationHeight, P2D);
-    buffer.noSmooth();
+    PGraphics buffer = createGraphics(config.evaluationWidth, config.evaluationHeight);
     buffer.beginDraw();
-    buffer.background(255);
+    buffer.background(config.automaticBackground);
     buffer.pushMatrix();
     buffer.translate(config.evaluationWidth * 0.5, config.evaluationHeight * 0.5);
     individualRenderer.render(individual, buffer);
@@ -114,19 +113,15 @@ class TargetImageFitness {
 
     double squaredError = 0.0;
     for (int i = 0; i < expectedLength; i++) {
-      int candidatePixel = candidate.pixels[i];
-      int targetPixel = target.pixels[i];
-      int redDifference = ((candidatePixel >> 16) & 0xff) - ((targetPixel >> 16) & 0xff);
-      int greenDifference = ((candidatePixel >> 8) & 0xff) - ((targetPixel >> 8) & 0xff);
-      int blueDifference = (candidatePixel & 0xff) - (targetPixel & 0xff);
-      squaredError += (double) redDifference * redDifference;
-      squaredError += (double) greenDifference * greenDifference;
-      squaredError += (double) blueDifference * blueDifference;
+      int candidateBrightness = candidate.pixels[i] & 0xff;
+      int targetBrightness = target.pixels[i] & 0xff;
+      int difference = targetBrightness - candidateBrightness;
+      squaredError += (double) difference * difference;
     }
 
-    double rmse = Math.sqrt(squaredError / (expectedLength * 3.0));
-    double normalized = clampUnit(rmse / 255.0);
-    double fitness = clampUnit(1.0 - normalized);
+    double rmse = Math.sqrt(squaredError / expectedLength);
+    double normalized = rmse / 255.0;
+    double fitness = 1.0 - normalized;
     if (Double.isNaN(rmse) || Double.isInfinite(rmse)) {
       throw new IllegalStateException("RMSE calculation produced a non-finite result");
     }
@@ -140,17 +135,9 @@ class TargetImageFitness {
     if (source.width <= 0 || source.height <= 0) {
       throw new IllegalArgumentException("Target image must have positive dimensions");
     }
-    PGraphics normalized = createGraphics(config.evaluationWidth, config.evaluationHeight, P2D);
-    normalized.noSmooth();
-    normalized.beginDraw();
-    normalized.background(255);
-    normalized.imageMode(CORNER);
-    // Fixed stretch-to-size policy; transparency is flattened against white.
-    normalized.image(source, 0, 0, config.evaluationWidth, config.evaluationHeight);
-    normalized.endDraw();
-    PImage result = normalized.get();
-    normalized.dispose();
-    return result;
+    PImage target = source.copy();
+    target.resize(config.evaluationWidth, config.evaluationHeight);
+    return target;
   }
 
   private void validateComparableImages(PImage candidate, PImage target) {
@@ -165,9 +152,6 @@ class TargetImageFitness {
     }
   }
 
-  private double clampUnit(double value) {
-    return Math.max(0.0, Math.min(1.0, value));
-  }
 
   private void printMissingTargetMessage() {
     println(

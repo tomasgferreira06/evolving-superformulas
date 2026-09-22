@@ -37,7 +37,7 @@ class ExperimentRunner {
     ExperimentLogger logger = null;
     try {
       java.io.File outputDirectory = createIsolatedOutputDirectory();
-      logger = new ExperimentLogger(outputDirectory);
+      logger = new ExperimentLogger(outputDirectory, config);
       lastOutputDirectory = outputDirectory;
       lastCombinationSummaries.clear();
 
@@ -271,7 +271,14 @@ class ExperimentRunner {
       "yyyyMMdd_HHmmss_SSS", java.util.Locale.US
     );
     String executionId = "exp_" + format.format(new java.util.Date());
-    return new java.io.File(sketchPath("experiments"), executionId);
+    java.io.File experimentsDirectory = new java.io.File(sketchPath("experiments"));
+    java.io.File candidate = new java.io.File(experimentsDirectory, executionId);
+    int suffix = 1;
+    while (candidate.exists()) {
+      candidate = new java.io.File(experimentsDirectory, executionId + "_" + suffix);
+      suffix++;
+    }
+    return candidate;
   }
 
   private void printCombinationSummary(ExperimentCombinationSummary summary) {

@@ -141,8 +141,8 @@ class SuperFormulaRenderer {
 
   private void applyStyle(PGraphics target) {
     target.noFill();
-    target.stroke(24);
-    target.strokeWeight(config.strokeWeight);
+    target.stroke(config.automaticStroke);
+    target.strokeWeight(config.automaticStrokeWeight(target.height));
   }
 
   private void beginShape(PGraphics target) {
@@ -159,8 +159,8 @@ class SuperFormulaRenderer {
 
   private void drawDiagnostic(PGraphics target) {
     float size = min(target.width, target.height) * 0.12;
-    target.stroke(180, 30, 30);
-    target.strokeWeight(config.strokeWeight);
+    target.stroke(config.automaticStroke);
+    target.strokeWeight(config.automaticStrokeWeight(target.height));
     target.noFill();
     target.line(-size, -size, size, size);
     target.line(-size, size, size, -size);
