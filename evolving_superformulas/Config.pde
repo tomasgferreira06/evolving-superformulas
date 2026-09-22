@@ -1,9 +1,6 @@
 class Config {
   // Project baseline settings; these are not assignment-mandated.
   final boolean runStartupValidation = false;
-  final int experimentGenerations = 1000;
-  final int experimentRunsPerCombination = 5;
-  final long experimentSeedStride = 100000L;
   final int formulasPerIndividual;
   final int populationSize;
   final long randomSeed;
@@ -18,7 +15,7 @@ class Config {
   final String targetImagePath = "target.png";
   final int evaluationWidth = 256;
   final int evaluationHeight = 256;
-  final int maxAutomaticGenerations = 1000;
+  final int maxAutomaticGenerations = 200;
   final int eliteSize = 1;
   final int automaticBackground = 255;
   final int automaticStroke = 0;
@@ -130,20 +127,6 @@ class Config {
     }
     if (maxAutomaticGenerations <= 0) {
       throw new IllegalArgumentException("maxAutomaticGenerations must be positive");
-    }
-    if (experimentGenerations <= 0) {
-      throw new IllegalArgumentException("experimentGenerations must be positive");
-    }
-    if (experimentGenerations > maxAutomaticGenerations) {
-      throw new IllegalArgumentException(
-        "experimentGenerations must not exceed maxAutomaticGenerations"
-      );
-    }
-    if (experimentRunsPerCombination <= 0) {
-      throw new IllegalArgumentException("experimentRunsPerCombination must be positive");
-    }
-    if (experimentSeedStride <= 0) {
-      throw new IllegalArgumentException("experimentSeedStride must be positive");
     }
     if (!isFinite(mutationRate) || mutationRate < 0 || mutationRate > 1) {
       throw new IllegalArgumentException("mutationRate must be in [0, 1]");
