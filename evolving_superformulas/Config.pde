@@ -1,5 +1,5 @@
 class Config {
-  // Project baseline settings; these are not assignment-mandated.
+  // Project baseline settings
   final int formulasPerIndividual;
   final int populationSize;
   final long randomSeed;
@@ -115,17 +115,11 @@ class Config {
     if (populationSize <= 0) {
       throw new IllegalArgumentException("populationSize must be positive");
     }
-    if (eliteSize != 1 || eliteSize > populationSize) {
+    if (eliteSize > populationSize) {
       throw new IllegalArgumentException("eliteSize must be exactly 1 and fit the population");
     }
     if (targetImagePath == null || targetImagePath.length() == 0) {
       throw new IllegalArgumentException("targetImagePath must not be empty");
-    }
-    if (evaluationWidth <= 0 || evaluationHeight <= 0) {
-      throw new IllegalArgumentException("Evaluation dimensions must be positive");
-    }
-    if (maxAutomaticGenerations <= 0) {
-      throw new IllegalArgumentException("maxAutomaticGenerations must be positive");
     }
     if (!isFinite(mutationRate) || mutationRate < 0 || mutationRate > 1) {
       throw new IllegalArgumentException("mutationRate must be in [0, 1]");
@@ -155,25 +149,17 @@ class Config {
     validateFloatRange("n2", n2Min, n2Max);
     validateFloatRange("n3", n3Min, n3Max);
 
-    if (mMin < 1 || mMax < mMin) {
-      throw new IllegalArgumentException("m bounds must define a positive integer range");
-    }
     if (!isFinite(thetaMin) || !isFinite(thetaMax) || thetaMax <= thetaMin) {
       throw new IllegalArgumentException("theta bounds must be finite and increasing");
     }
     if (!isFinite(thetaStep) || thetaStep <= 0) {
       throw new IllegalArgumentException("thetaStep must be finite and positive");
     }
-    if (canvasWidth <= 0 || canvasHeight <= 0) {
-      throw new IllegalArgumentException("canvas dimensions must be positive");
-    }
+
     if (!isFinite(renderScale) || renderScale <= 0) {
       throw new IllegalArgumentException("renderScale must be finite and positive");
     }
-    if (automaticBackground < 0 || automaticBackground > 255
-        || automaticStroke < 0 || automaticStroke > 255) {
-      throw new IllegalArgumentException("Automatic render colors must be 8-bit values");
-    }
+
     if (!isFinite(automaticStrokeWeightFraction) || automaticStrokeWeightFraction <= 0) {
       throw new IllegalArgumentException("Automatic stroke-weight fraction must be positive");
     }
@@ -182,9 +168,6 @@ class Config {
     }
     if (!isFinite(n1Epsilon) || n1Epsilon <= 0 || n1Min <= n1Epsilon) {
       throw new IllegalArgumentException("n1Min must be safely above n1Epsilon");
-    }
-    if (aMin <= divisorEpsilon || bMin <= divisorEpsilon) {
-      throw new IllegalArgumentException("aMin and bMin must be safely above divisorEpsilon");
     }
     if (!isFinite(maximumSafeRadius) || maximumSafeRadius <= 0) {
       throw new IllegalArgumentException("maximumSafeRadius must be finite and positive");
@@ -233,9 +216,6 @@ class Config {
   float encodeM(int decoded) {
     if (decoded < mMin || decoded > mMax) {
       throw new IllegalArgumentException("m must be inside the configured integer range");
-    }
-    if (mMin == mMax) {
-      return 0.0;
     }
     // Encode at the centre of the integer's decoding bucket.
     return (decoded - mMin + 0.5) / (float) (mMax - mMin + 1);

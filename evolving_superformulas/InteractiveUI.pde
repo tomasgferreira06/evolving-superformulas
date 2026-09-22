@@ -40,7 +40,7 @@ class InteractiveUI {
   int layoutWidth = -1;
   int layoutHeight = -1;
   int layoutPopulationSize = -1;
-  AutomaticEvolution automaticEvolution;
+  AutomaticEvolutionController automaticEvolution;
 
   InteractiveUI(Config config, IndividualRenderer individualRenderer, InteractiveFitness interactiveFitness) {
     if (config == null || individualRenderer == null || interactiveFitness == null) {
@@ -51,7 +51,7 @@ class InteractiveUI {
     this.interactiveFitness = interactiveFitness;
   }
 
-  void setAutomaticEvolution(AutomaticEvolution automaticEvolution) {
+  void setAutomaticEvolution(AutomaticEvolutionController automaticEvolution) {
     this.automaticEvolution = automaticEvolution;
   }
 

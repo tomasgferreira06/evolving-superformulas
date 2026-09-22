@@ -3,7 +3,7 @@ enum EvolutionMode {
   AUTOMATIC
 }
 
-class AutomaticEvolution {
+class AutomaticEvolutionController {
   final Config config;
   final TargetImageFitness targetFitness;
   final Crossover crossover;
@@ -22,7 +22,7 @@ class AutomaticEvolution {
   java.util.Random crossoverRandom;
   java.util.Random mutationRandom;
 
-  AutomaticEvolution(Config config, TargetImageFitness targetFitness,
+  AutomaticEvolutionController(Config config, TargetImageFitness targetFitness,
       Crossover crossover, Mutation mutation) {
     if (config == null || targetFitness == null || crossover == null || mutation == null) {
       throw new IllegalArgumentException("AutomaticEvolution dependencies must not be null");

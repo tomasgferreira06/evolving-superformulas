@@ -10,7 +10,7 @@ Mutation mutation;
 java.util.Random crossoverRandom;
 java.util.Random mutationRandom;
 TargetImageFitness targetFitness;
-AutomaticEvolution automaticEvolution;
+AutomaticEvolutionController automaticEvolution;
 
 void settings() {
   size(config.canvasWidth, config.canvasHeight, P2D);
@@ -31,7 +31,7 @@ void setup() {
   resetInteractiveRun();
 
   targetFitness.loadConfiguredTarget();
-  automaticEvolution = new AutomaticEvolution(config, targetFitness, crossover, mutation);
+  automaticEvolution = new AutomaticEvolutionController(config, targetFitness, crossover, mutation);
   interactiveUI.setAutomaticEvolution(automaticEvolution);
   println("Startup completed in " + (millis() - startupStartedAt) + " ms");
 }
