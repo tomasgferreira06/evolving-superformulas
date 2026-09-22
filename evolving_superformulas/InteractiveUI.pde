@@ -178,13 +178,19 @@ class InteractiveUI {
 
   boolean rateSelected(Population population, int rating) {
     if (!hasValidSelectedIndex(population)) return false;
-    interactiveFitness.assignRating(population.getIndividual(selectedIndex), rating);
+    Individual selected = population.getIndividual(selectedIndex);
+    interactiveFitness.assignRating(selected, rating);
+    population.sortByInteractiveFitness(interactiveFitness);
+    selectedIndex = population.indexOf(selected);
     return true;
   }
 
   boolean clearSelectedRating(Population population) {
     if (!hasValidSelectedIndex(population)) return false;
-    interactiveFitness.clearRating(population.getIndividual(selectedIndex));
+    Individual selected = population.getIndividual(selectedIndex);
+    interactiveFitness.clearRating(selected);
+    population.sortByInteractiveFitness(interactiveFitness);
+    selectedIndex = population.indexOf(selected);
     return true;
   }
 

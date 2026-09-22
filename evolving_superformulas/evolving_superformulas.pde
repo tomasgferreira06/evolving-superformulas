@@ -227,22 +227,22 @@ void runPhaseThreeChecks(Population baseline) {
     "Reset with the same seed did not reproduce the initial population");
 
   Population sameSeedPopulation = new Population(
-    new Config(config.populationSize, config.randomSeed)
+    new Config(config.populationSize, config.randomSeed, config.formulasPerIndividual)
   );
   require(populationsHaveSameGenomes(initialSnapshot, sameSeedPopulation),
     "Separate population with the same seed was not reproducible");
 
   Population differentSeedPopulation = new Population(
-    new Config(config.populationSize, config.randomSeed + 1)
+    new Config(config.populationSize, config.randomSeed + 1, config.formulasPerIndividual)
   );
   require(populationsHaveDifferentGenomes(initialSnapshot, differentSeedPopulation),
     "Different seed did not change any normalized gene");
 
-  Population evenPopulation = new Population(new Config(8, config.randomSeed));
+  Population evenPopulation = new Population(new Config(8, config.randomSeed, config.formulasPerIndividual));
   require(evenPopulation.size() == 8, "Even population size 8 failed");
   validatePopulationShapeAndOwnership(evenPopulation);
 
-  Population singlePopulation = new Population(new Config(1, config.randomSeed));
+  Population singlePopulation = new Population(new Config(1, config.randomSeed, config.formulasPerIndividual));
   require(singlePopulation.size() == 1, "Single-member population failed");
   require(singlePopulation.getIndividual(0).getFormulaCount() == config.formulasPerIndividual,
     "Single-member population has invalid Individual shape");
@@ -1351,8 +1351,8 @@ void expectMissingTargetFailure() {
 }
 
 void runPhaseElevenChecks() {
-  require(config.maxAutomaticGenerations == 100,
-    "Phase 11 baseline maxAutomaticGenerations must be 100");
+  require(config.maxAutomaticGenerations == 1000,
+    "Configured maxAutomaticGenerations must be 1000");
   validateAutomaticPopulationSize(1);
   validateAutomaticPopulationSize(5);
   validateAutomaticPopulationSize(8);
@@ -1718,6 +1718,7 @@ void runPhaseFourteenChecks() {
   validateFitnessFormulaEquivalence();
   validateAutomaticElitePreservation();
   validateInteractiveElitePreservation();
+  validateFitnessOrdering();
   validatePopulationThirty();
   println("Phase 14 validation passed: reference alignment and one-elite preservation");
 }
@@ -1857,6 +1858,52 @@ void validatePopulationThirty() {
     "Experiment operator families changed during Phase 14");
 }
 
+
+void validateFitnessOrdering() {
+  Config interactiveConfig = new Config(5, config.randomSeed, config.formulasPerIndividual);
+  Population interactivePopulation = new Population(interactiveConfig);
+  Individual firstTie = interactivePopulation.getIndividual(0);
+  Individual secondTie = interactivePopulation.getIndividual(1);
+  Individual highest = interactivePopulation.getIndividual(2);
+  Individual lowest = interactivePopulation.getIndividual(3);
+  Individual unrated = interactivePopulation.getIndividual(4);
+  interactiveFitness.assignRating(firstTie, 7);
+  interactiveFitness.assignRating(secondTie, 7);
+  interactiveFitness.assignRating(highest, 10);
+  interactiveFitness.assignRating(lowest, 2);
+
+  interactivePopulation.sortByInteractiveFitness(interactiveFitness);
+  require(interactivePopulation.getIndividual(0) == highest,
+    "Highest interactive fitness was not sorted first");
+  require(interactivePopulation.getIndividual(1) == firstTie
+      && interactivePopulation.getIndividual(2) == secondTie,
+    "Interactive fitness ties did not preserve their previous order");
+  require(interactivePopulation.getIndividual(3) == lowest,
+    "Lower interactive fitness is out of order");
+  require(interactivePopulation.getIndividual(4) == unrated,
+    "UNRATED Individual was not sorted last");
+
+  Config automaticConfig = new Config(
+    6, config.randomSeed, config.formulasPerIndividual,
+    config.mutationRate, config.uniformMutationDelta, config.gaussianMutationSigma,
+    config.crossoverOperator, config.mutationOperator
+  );
+  Population automaticPopulation = new Population(automaticConfig);
+  AutomaticEvolution engine = createAutomaticEngine(automaticConfig, automaticPopulation);
+  requireAutomaticFitnessDescending(engine, automaticPopulation);
+  require(engine.stepFromCurrentEvaluation(automaticPopulation),
+    "Automatic ordering test did not evolve");
+  requireAutomaticFitnessDescending(engine, automaticPopulation);
+}
+
+void requireAutomaticFitnessDescending(
+    AutomaticEvolution engine, Population population) {
+  for (int i = 1; i < population.size(); i++) {
+    require(engine.getFitness(i - 1, population) >= engine.getFitness(i, population),
+      "Automatic population is not sorted by descending fitness at index " + i);
+  }
+  require(engine.bestIndex == 0, "Best automatic Individual must be at index 0");
+}
 boolean populationContainsGenome(Individual expected, Population actual) {
   for (int i = 0; i < actual.size(); i++) {
     if (individualsHaveSameGenomes(expected, actual.getIndividual(i))) return true;

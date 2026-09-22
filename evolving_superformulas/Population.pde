@@ -103,6 +103,51 @@ class Population {
   }
 
 
+  void sortByFitnessDescending(double[] fitnessValues) {
+    if (fitnessValues == null || fitnessValues.length != individuals.length) {
+      throw new IllegalArgumentException("Fitness values must match populationSize");
+    }
+    for (int i = 0; i < fitnessValues.length; i++) {
+      if (Double.isNaN(fitnessValues[i]) || Double.isInfinite(fitnessValues[i])) {
+        throw new IllegalArgumentException("Fitness values must be finite");
+      }
+    }
+
+    // Stable insertion sort keeps the previous order when fitness values tie.
+    for (int i = 1; i < individuals.length; i++) {
+      Individual individual = individuals[i];
+      double fitness = fitnessValues[i];
+      int insertionIndex = i - 1;
+      while (insertionIndex >= 0 && fitnessValues[insertionIndex] < fitness) {
+        individuals[insertionIndex + 1] = individuals[insertionIndex];
+        fitnessValues[insertionIndex + 1] = fitnessValues[insertionIndex];
+        insertionIndex--;
+      }
+      individuals[insertionIndex + 1] = individual;
+      fitnessValues[insertionIndex + 1] = fitness;
+    }
+  }
+
+  void sortByInteractiveFitness(InteractiveFitness interactiveFitness) {
+    if (interactiveFitness == null) {
+      throw new IllegalArgumentException("Interactive fitness must not be null");
+    }
+    double[] ratings = new double[individuals.length];
+    for (int i = 0; i < individuals.length; i++) {
+      ratings[i] = interactiveFitness.isRated(individuals[i])
+        ? interactiveFitness.getRating(individuals[i])
+        : -1.0;
+    }
+    sortByFitnessDescending(ratings);
+  }
+
+  int indexOf(Individual individual) {
+    for (int i = 0; i < individuals.length; i++) {
+      if (individuals[i] == individual) return i;
+    }
+    return -1;
+  }
+
   private int bestRatedIndex(InteractiveFitness interactiveFitness) {
     int bestIndex = 0;
     int bestRating = interactiveFitness.getRating(getIndividual(0));

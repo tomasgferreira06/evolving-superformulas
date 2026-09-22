@@ -1,7 +1,7 @@
 class Config {
   // Project baseline settings; these are not assignment-mandated.
   final boolean runStartupValidation = false;
-  final int experimentGenerations = 100;
+  final int experimentGenerations = 1000;
   final int experimentRunsPerCombination = 5;
   final long experimentSeedStride = 100000L;
   final int formulasPerIndividual;
@@ -18,7 +18,7 @@ class Config {
   final String targetImagePath = "target.png";
   final int evaluationWidth = 256;
   final int evaluationHeight = 256;
-  final int maxAutomaticGenerations = 100;
+  final int maxAutomaticGenerations = 1000;
   final int eliteSize = 1;
   final int automaticBackground = 255;
   final int automaticStroke = 0;

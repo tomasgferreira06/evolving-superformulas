@@ -138,8 +138,6 @@ class AutomaticEvolution {
     }
     double[] evaluated = new double[population.size()];
     double sum = 0.0;
-    double highest = -1.0;
-    int highestIndex = -1;
     for (int i = 0; i < population.size(); i++) {
       double fitness = targetFitness.evaluate(population.getIndividual(i)).fitness;
       if (Double.isNaN(fitness) || Double.isInfinite(fitness)
@@ -148,14 +146,11 @@ class AutomaticEvolution {
       }
       evaluated[i] = fitness;
       sum += fitness;
-      if (fitness > highest) {
-        highest = fitness;
-        highestIndex = i;
-      }
     }
+    population.sortByFitnessDescending(evaluated);
     currentFitness = evaluated;
-    bestFitness = highest;
-    bestIndex = highestIndex;
+    bestFitness = evaluated[0];
+    bestIndex = 0;
     meanFitness = sum / evaluated.length;
     evaluatedGeneration = population.getGeneration();
     evaluatedTargetRevision = targetFitness.getTargetRevision();

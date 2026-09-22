@@ -18,6 +18,9 @@ evolving-harmonographs behavior without removing assignment requirements.
   crossover and mutation. Automatic fitness is reevaluated after replacement.
 - Interactive ties are deterministic: the lowest population index wins. The
   copied elite starts UNRATED, like every member of a new interactive generation.
+- Populations are kept in stable descending fitness order after automatic
+  evaluation and after interactive rating changes. Equal fitness values retain
+  their previous order; interactive `UNRATED` individuals remain at the end.
 - Experiment batches write Phase 14 metadata in a new timestamped directory.
   A numeric suffix prevents a timestamp collision from reusing a directory.
 
